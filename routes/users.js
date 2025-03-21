@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 // User registration
 export const registerUser = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { email, password } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -11,10 +11,13 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Email already in use" });
     }
 
-    const newUser = new User({ username, email, password });
+    const newUser = new User({ email, password });
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully" });
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.status(200).json({ token });
   } catch (error) {
     res.status(500).json({ message: "Error registering user", error });
   }
